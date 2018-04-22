@@ -1,0 +1,10 @@
+Notes on "Evolving" project
+
+- seems much more difficult to find attractive mutations as a melody progresses.  In the
+beginning just about any change is likely to be advantageous, but as the melody improves
+the likelihood of finding a good mutation decreases rather dramatically.
+
+- it's necessary to ensure that mutations by pitch are weighted to favor smaller 
+intervals.  Otherwise the value of pitch mutations decreases dramatically.
+
+- there may be some types of melodies that simply could not ever come into existence this way... some melodies created by normal means may include aspects that could not be created by following a series of changes in this way...
