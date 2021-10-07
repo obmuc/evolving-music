@@ -1,9 +1,9 @@
-from midiutil.MidiFileGenerator import MidiFileGenerator, MidiTrack
 import os
 import datetime
-import Tkinter
-import tkFileDialog
 import random
+
+from pathlib import Path
+from midiutil import MIDIFile
 
 
 class FileHandler(object):
@@ -23,17 +23,38 @@ class FileHandler(object):
     """
 
     def __init__(self):
-        self.root_directory = '/Users/cumbojd/personal/music/evolving/output'
+        self.root_directory = '/Users/obmuc/Documents/programming/python/evolving/evolving-music/output'
+        self.date_string = str(datetime.datetime.now().date())
         self.directory = self._setup_directory()
         #self.seed_file = self._get_seed_file()
 
+    def increment_directory_name(self, directory):
+        highest_current = None
+        for path in Path(self.root_directory).iterdir():
+            if path.is_dir():
+                last_part_of_path = str(path).split('/')[-1]
+                date_part_of_name = last_part_of_path.split('_')[0]
+                if (date_part_of_name == self.date_string):
+                    try:
+                        directory_increment = last_part_of_path.split('_')[1]
+                    except IndexError:
+                        continue
+                    if (not highest_current) or (int(directory_increment) > highest_current):
+                        highest_current = int(directory_increment)
+        if highest_current:
+            return f"{directory}_{highest_current + 1}"
+        else:
+            return f"{directory}_1"
+            
+
     def _setup_directory(self):
         """Create a folder to store today's mutations, if necessary)"""
-        directory = os.path.join(self.root_directory, str(datetime.datetime.now().date()))
+        directory = os.path.join(self.root_directory, self.date_string)
         if not os.path.exists(directory):
             os.makedirs(directory)
         else:
-            raise Exception("Directory already exists!!!  Rename it (add suffix) to continue.")
+            directory = self.increment_directory_name(directory)
+            # raise Exception("Directory already exists!!!  Rename it (add suffix) to continue.")
         # create a 'seed' directory inside the folder to store the file used to generate that day's mutations.
         seed_directory = os.path.join(directory, 'seed')
         if not os.path.exists(seed_directory):
@@ -41,18 +62,11 @@ class FileHandler(object):
         return directory
 
     def get_seed_file(self):
-        """Open a dialog for the user to choose the file to start from"""
-        # Look for a .mid file in self.root_directory and return the first found
+        """Get the seed file from the root_directory"""
         os.chdir(self.root_directory)
         for listed_file in os.listdir("."):
             if listed_file.endswith(".mid"):
                 return listed_file
-        # Otherwise open a dialog to select the file
-        root = Tkinter.Tk()
-        root.withdraw()
-        file_path = tkFileDialog.askopenfilename()
-        file_path_parts = file_path.split('/')
-        return file_path_parts[-1]
 
     @staticmethod
     def filename_to_list(filename):
@@ -80,24 +94,50 @@ class FileHandler(object):
         return "%s.mid" % the_string
 
 
-class MidiMaker(object):
-    """Transforms NoteUnits into midi notes that can be output"""
+# class MidiMakerOld(object):
+#     """Transforms NoteUnits into midi notes that can be output"""
 
-    def __init__(self, melody, file_handler):
-        self.file_generator = MidiFileGenerator()
-        self.track = MidiTrack(channel=1, tempo=90)
+#     def __init__(self, melody, file_handler):
+#         self.file_generator = MidiFileGenerator()
+#         self.track = MidiTrack(channel=1, tempo=90)
+#         self.file_handler = file_handler
+#         self.melody = melody
+
+#     def write(self):
+#         current_time = 0
+#         for note_unit in self.melody:
+#             for note in note_unit:
+#                 self.track.add_note(current_time, note[1], note[0], 100)
+#                 current_time += note[1]
+#         self.file_generator.tracks.append(self.track)
+#         self.file_generator.writeToFile(os.path.join(
+#             self.file_handler.directory, self.file_handler.list_to_filename(melody_list=self.melody)))
+
+
+class MidiMaker:
+    """ Transforms NoteUnits into midi notes that can be output. """
+
+    def __init__(self, file_handler, melody):
         self.file_handler = file_handler
         self.melody = melody
 
+        # set some defaults
+        self.track = 0
+        self.channel = 0
+        self.time = 0
+        self.tempo = 60
+        self.volume = 127
+
     def write(self):
+        midi_file = MIDIFile(1)
+        midi_file.addTempo(self.track, self.time, self.tempo)
         current_time = 0
         for note_unit in self.melody:
             for note in note_unit:
-                self.track.add_note(current_time, note[1], note[0], 100)
-                current_time += note[1]
-        self.file_generator.tracks.append(self.track)
-        self.file_generator.writeToFile(os.path.join(
-            self.file_handler.directory, self.file_handler.list_to_filename(melody_list=self.melody)))
+                midi_file.addNote(self.track, self.channel, note[0], current_time, 1, self.volume)  # note[1]
+        file_name_with_path = os.path.join(self.file_handler.directory, self.file_handler.list_to_filename(melody_list=self.melody))
+        with open(file_name_with_path, "wb") as output_file:
+            midi_file.writeFile(output_file)
 
 
 class Mutator(object):
@@ -323,17 +363,17 @@ def main():
     file_handler = FileHandler()
     seed_file = file_handler.get_seed_file()
     seed_melody = file_handler.filename_to_list(filename=seed_file)
-    print "original melody:"
-    print seed_melody
+    print("original melody:")
+    print(seed_melody)
     i = 0
     created_melodies = []
     mutator = Mutator(seed_melody=seed_melody, mutation_percentage=5)
     while i < 20:
         mutated_melody = mutator.mutate()
         if mutated_melody != seed_melody and mutated_melody not in created_melodies:
-            print "mutated_melody:"
-            print mutated_melody
-            midi_maker = MidiMaker(melody=mutated_melody, file_handler=file_handler)
+            print("mutated_melody:")
+            print(mutated_melody)
+            midi_maker = MidiMaker(file_handler=file_handler, melody=mutated_melody)
             midi_maker.write()
             created_melodies.append(mutated_melody)
             i += 1
