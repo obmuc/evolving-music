@@ -5,4 +5,5 @@
 		- Activate the venv: `source evolving_venv/bin/activate`
 		- install the midiutil library: `pip install midiutil`
 2. Running the application:
-	- `python3 application.py` 
+	- Navigate to the folder containing the application.py file.
+	- execute: `python3 application.py` 
