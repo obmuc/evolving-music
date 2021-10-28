@@ -1,0 +1,12 @@
+<html>
+	<head>
+		<script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.22.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.4.0"></script>
+	</head>
+	<body>
+		<p>{{ seed_file_with_path }}</p>
+
+		<midi-player src="{{ seed_file_with_path }}" sound-font visualizer="#seedFilePianoRollVisualizer"></midi-player>
+
+		<midi-visualizer type="piano-roll" id="seedFilePianoRollVisualizer" src="{{ seed_file_with_path }}"></midi-visualizer>
+	</body>
+</html>
