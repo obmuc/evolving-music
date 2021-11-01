@@ -23,7 +23,6 @@
 	- Navigate to the folder containg this README-SET.txt file
 	- Execute the following to start the Flask Development server:
 	```
-	export FLASK_ENV=development
-	flask run
+	python app.py
 	```
 	- The website can be viewed at this URL: localhost:5000

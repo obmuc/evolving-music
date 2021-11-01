@@ -23,10 +23,9 @@ class FileHandler(object):
     """
 
     def __init__(self):
-        self.root_directory = '/Users/obmuc/Documents/programming/python/evolving/evolving-music/output'
+        self.root_directory = '/Users/obmuc/Documents/programming/python/evolving/evolving-music/static/midi_files'
         self.date_string = str(datetime.datetime.now().date())
         self.directory = self._setup_directory()
-        #self.seed_file = self._get_seed_file()
 
     def increment_directory_name(self, directory):
         highest_current = None
@@ -46,7 +45,6 @@ class FileHandler(object):
         else:
             return f"{directory}_1"
             
-
     def _setup_directory(self):
         """Create a folder to store today's mutations, if necessary)"""
         directory = os.path.join(self.root_directory, self.date_string)
@@ -54,19 +52,11 @@ class FileHandler(object):
             os.makedirs(directory)
         else:
             directory = self.increment_directory_name(directory)
-            # raise Exception("Directory already exists!!!  Rename it (add suffix) to continue.")
         # create a 'seed' directory inside the folder to store the file used to generate that day's mutations.
         seed_directory = os.path.join(directory, 'seed')
         if not os.path.exists(seed_directory):
             os.makedirs(seed_directory)
         return directory
-
-    def get_seed_file(self):
-        """Get the seed file from the root_directory"""
-        os.chdir(self.root_directory)
-        for listed_file in os.listdir("."):
-            if listed_file.endswith(".mid"):
-                return listed_file
 
     @staticmethod
     def filename_to_list(filename):
@@ -92,26 +82,6 @@ class FileHandler(object):
                 the_string += '__'
             the_string += "_".join(["%s-%s" % (note[0], str(note[1]).replace('.', 'p')) for note in note_unit])
         return "%s.mid" % the_string
-
-
-# class MidiMakerOld(object):
-#     """Transforms NoteUnits into midi notes that can be output"""
-
-#     def __init__(self, melody, file_handler):
-#         self.file_generator = MidiFileGenerator()
-#         self.track = MidiTrack(channel=1, tempo=90)
-#         self.file_handler = file_handler
-#         self.melody = melody
-
-#     def write(self):
-#         current_time = 0
-#         for note_unit in self.melody:
-#             for note in note_unit:
-#                 self.track.add_note(current_time, note[1], note[0], 100)
-#                 current_time += note[1]
-#         self.file_generator.tracks.append(self.track)
-#         self.file_generator.writeToFile(os.path.join(
-#             self.file_handler.directory, self.file_handler.list_to_filename(melody_list=self.melody)))
 
 
 class MidiMaker:
@@ -359,6 +329,7 @@ class Mutator(object):
         return mutated_melody
 
 
+# For running via command line
 def main():
     file_handler = FileHandler()
     seed_file = file_handler.get_seed_file()
