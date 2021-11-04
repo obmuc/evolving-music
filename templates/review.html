@@ -3,10 +3,24 @@
 		<script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.22.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.4.0"></script>
 	</head>
 	<body>
-		<p>{{ seed_file_with_relative_path }}</p>
+		<p>
+			Original Seed file<br />
+			{{ seed_file_with_relative_path }}
+		</p>
 
 		<midi-player src="{{ seed_file_with_relative_path }}" sound-font visualizer="#seedFilePianoRollVisualizer"></midi-player>
 
 		<midi-visualizer type="piano-roll" id="seedFilePianoRollVisualizer" src="{{ seed_file_with_relative_path }}"></midi-visualizer>
+
+		<hr />
+
+		{% for mutated_file in created_files %}
+			<!-- TODO: create some means of uniquely identifying each visualizer (hash of the file name?) -->
+		    <p>{{ mutated_file }}</p>
+		     
+		    <midi-player src="{{ mutated_file }}" sound-font visualizer="#seedFilePianoRollVisualizer"></midi-player>
+
+			<midi-visualizer type="piano-roll" id="seedFilePianoRollVisualizer" src="{{ mutated_file }}"></midi-visualizer>
+		{% endfor %}
 	</body>
 </html>

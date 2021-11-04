@@ -21,6 +21,10 @@
 	source evolving_venv/bin/activate
 	```
 	- Navigate to the folder containg this README-SET.txt file
+	- Optionally, set the development environment:
+	```
+	export FLASK_ENV=development
+	```
 	- Execute the following to start the Flask Development server:
 	```
 	python app.py

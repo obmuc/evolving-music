@@ -58,6 +58,13 @@ class FileHandler(object):
             os.makedirs(seed_directory)
         return directory
 
+    def get_seed_file(self):
+        """Get the seed file from the root_directory"""
+        os.chdir(self.root_directory)
+        for listed_file in os.listdir("."):
+            if listed_file.endswith(".mid"):
+                return listed_file
+
     @staticmethod
     def filename_to_list(filename):
         """Convert a string into a list representing a melody"""
@@ -108,6 +115,7 @@ class MidiMaker:
         file_name_with_path = os.path.join(self.file_handler.directory, self.file_handler.list_to_filename(melody_list=self.melody))
         with open(file_name_with_path, "wb") as output_file:
             midi_file.writeFile(output_file)
+        return file_name_with_path
 
 
 class Mutator(object):

@@ -1,5 +1,6 @@
 import os
 from flask import Flask, render_template, request
+from mutator import FileHandler, Mutator, MidiMaker
 
 app = Flask(__name__)
 
@@ -26,11 +27,29 @@ def review():
 
     seed_file_with_relative_path = seed_file_with_path.replace(current_directory, '')
 
-    print(seed_file_with_relative_path)
+    file_handler = FileHandler()
+    seed_melody = file_handler.filename_to_list(filename=seed_file)
+    i = 0
+    created_melodies = []
+    created_files = []
+    mutator = Mutator(seed_melody=seed_melody, mutation_percentage=5)
+    while i < 10:
+        mutated_melody = mutator.mutate()
+        if mutated_melody != seed_melody and mutated_melody not in created_melodies:
+            # print("mutated_melody:")
+            # print(mutated_melody)
+            # TODO: need to return a relative file instead for use in links... can't be full path
+            midi_maker = MidiMaker(file_handler=file_handler, melody=mutated_melody)
+            mutated_file = midi_maker.write()
+            created_melodies.append(mutated_melody)
+            created_files.append(mutated_file)
+            i += 1
+    # print(created_files)
 
     return render_template(
         'review.html',
-        seed_file_with_relative_path = seed_file_with_relative_path
+        seed_file_with_relative_path = seed_file_with_relative_path,
+        created_files = created_files
     )
 
 
