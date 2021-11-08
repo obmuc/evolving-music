@@ -17,17 +17,10 @@ def home():
 def review():
     seed_file = request.form.get('seed_file')
 
-    current_directory = os.getcwd()
-    midi_file_directory = f"{current_directory}/static/midi_files"
-
-    for dirpath, dirnames, files in os.walk(midi_file_directory):
-        for found_name in files:
-            if found_name == seed_file:
-                seed_file_with_path = os.path.join(dirpath, found_name)
-
-    seed_file_with_relative_path = seed_file_with_path.replace(current_directory, '')
-
     file_handler = FileHandler()
+    seed_file_with_full_path = file_handler.find_seed_file_on_disk(seed_file)
+    seed_file_with_relative_path = file_handler.full_to_relative_path(seed_file_with_full_path)
+
     seed_melody = file_handler.filename_to_list(filename=seed_file)
     i = 0
     created_melodies = []
@@ -36,13 +29,10 @@ def review():
     while i < 10:
         mutated_melody = mutator.mutate()
         if mutated_melody != seed_melody and mutated_melody not in created_melodies:
-            # print("mutated_melody:")
-            # print(mutated_melody)
-            # TODO: need to return a relative file instead for use in links... can't be full path
             midi_maker = MidiMaker(file_handler=file_handler, melody=mutated_melody)
             mutated_file = midi_maker.write()
             created_melodies.append(mutated_melody)
-            created_files.append(mutated_file)
+            created_files.append(file_handler.full_to_relative_path(mutated_file))
             i += 1
     # print(created_files)
 

@@ -18,9 +18,9 @@
 			<!-- TODO: create some means of uniquely identifying each visualizer (hash of the file name?) -->
 		    <p>{{ mutated_file }}</p>
 		     
-		    <midi-player src="{{ mutated_file }}" sound-font visualizer="#seedFilePianoRollVisualizer"></midi-player>
+		    <midi-player src="{{ mutated_file }}" sound-font visualizer="#{{ mutated_file }}PianoRollVisualizer"></midi-player>
 
-			<midi-visualizer type="piano-roll" id="seedFilePianoRollVisualizer" src="{{ mutated_file }}"></midi-visualizer>
+			<midi-visualizer type="piano-roll" id="#{{ mutated_file }}PianoRollVisualizer" src="{{ mutated_file }}"></midi-visualizer>
 		{% endfor %}
 	</body>
 </html>

@@ -58,6 +58,19 @@ class FileHandler(object):
             os.makedirs(seed_directory)
         return directory
 
+    def full_to_relative_path(self, full_path):
+        """Convert a full file path to a relative path for use in URLs"""
+        current_directory = os.getcwd()
+        return full_path.replace(current_directory, '')
+
+    def find_seed_file_on_disk(self, filename):
+        """Locate the given filename in the root directory, returning its full path.
+
+        Note that the file must be in the top level directory, not a sub-directory."""
+        for found_file in os.listdir(self.root_directory):
+            if found_file == filename:
+                return os.path.join(self.root_directory, found_file)
+
     def get_seed_file(self):
         """Get the seed file from the root_directory"""
         os.chdir(self.root_directory)
@@ -106,12 +119,13 @@ class MidiMaker:
         self.volume = 127
 
     def write(self):
-        midi_file = MIDIFile(1)
+        midi_file = MIDIFile(numTracks=1)
         midi_file.addTempo(self.track, self.time, self.tempo)
         current_time = 0
         for note_unit in self.melody:
             for note in note_unit:
-                midi_file.addNote(self.track, self.channel, note[0], current_time, 1, self.volume)  # note[1]
+                midi_file.addNote(self.track, self.channel, note[0], current_time, note[1], self.volume)  # note[1]
+                current_time += note[1]
         file_name_with_path = os.path.join(self.file_handler.directory, self.file_handler.list_to_filename(melody_list=self.melody))
         with open(file_name_with_path, "wb") as output_file:
             midi_file.writeFile(output_file)
@@ -338,6 +352,7 @@ class Mutator(object):
 
 
 # For running via command line
+# TODO: alter this to take a seed file name as an argument instead of calling 'get_seed_file()'
 def main():
     file_handler = FileHandler()
     seed_file = file_handler.get_seed_file()
