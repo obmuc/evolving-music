@@ -15,12 +15,20 @@
 		<hr />
 
 		{% for mutated_file in created_files %}
-			<!-- TODO: create some means of uniquely identifying each visualizer (hash of the file name?) -->
-		    <p>{{ mutated_file }}</p>
-		     
-		    <midi-player src="{{ mutated_file }}" sound-font visualizer="#{{ mutated_file }}PianoRollVisualizer"></midi-player>
+			<fieldset>
 
-			<midi-visualizer type="piano-roll" id="#{{ mutated_file }}PianoRollVisualizer" src="{{ mutated_file }}"></midi-visualizer>
+			    <legend>{{ mutated_file }}</legend>
+			     
+			    <midi-player src="{{ mutated_file }}" sound-font visualizer="#{{ mutated_file }}PianoRollVisualizer"></midi-player>
+
+				<midi-visualizer type="piano-roll" id="#{{ mutated_file }}PianoRollVisualizer" src="{{ mutated_file }}"></midi-visualizer>
+
+				<form action="/select" method="post">
+					<input name="relative_file_path" type="hidden" value="{{ mutated_file }}" />
+					<button type="submit" name="selection_type" value="regenerate">Select and Regenerate</button>
+					<button type="submit" name="selection_type" value="quit">Select and Quit</button>
+				</form>
+			</fieldset>
 		{% endfor %}
 	</body>
 </html>

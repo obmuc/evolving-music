@@ -115,7 +115,7 @@ class MidiMaker:
         self.track = 0
         self.channel = 0
         self.time = 0
-        self.tempo = 60
+        self.tempo = 120
         self.volume = 127
 
     def write(self):
