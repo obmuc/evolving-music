@@ -25,7 +25,7 @@ class FileHandler(object):
     def __init__(self):
         self.root_directory = '/Users/obmuc/Documents/programming/python/evolving/evolving-music/static/midi_files'
         self.date_string = str(datetime.datetime.now().date())
-        self.directory = self._setup_directory()
+        self.directory = self._setup_directories()
 
     def increment_directory_name(self, directory):
         highest_current = None
@@ -45,36 +45,55 @@ class FileHandler(object):
         else:
             return f"{directory}_1"
             
-    def _setup_directory(self):
-        """Create a folder to store today's mutations, if necessary)"""
-        directory = os.path.join(self.root_directory, self.date_string)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+    def _setup_directories(self):
+        """Create the necessary directories, if they don't exist already."""
+        # Create the 'seed_file' directory, if necessary
+        seed_file_directory = os.path.join(self.root_directory, 'seed_file')
+        if not os.path.exists(seed_file_directory):
+            os.makedirs(seed_file_directory)
+
+        # Create the 'progression' directory, if necessary
+        progression_directory = os.path.join(self.root_directory, 'progression')
+        if not os.path.exists(progression_directory):
+            os.makedirs(progression_directory)
+
+        # Create a folder to store today's mutations, if necessary
+        output_directory = os.path.join(self.root_directory, self.date_string)
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory)
         else:
-            directory = self.increment_directory_name(directory)
+            output_directory = self.increment_directory_name(output_directory)
         # create a 'seed' directory inside the folder to store the file used to generate that day's mutations.
-        seed_directory = os.path.join(directory, 'seed')
-        if not os.path.exists(seed_directory):
-            os.makedirs(seed_directory)
-        return directory
+        output_seed_directory = os.path.join(output_directory, 'seed')
+        if not os.path.exists(output_seed_directory):
+            os.makedirs(output_seed_directory)
+        return output_directory
 
     def full_to_relative_path(self, full_path):
         """Convert a full file path to a relative path for use in URLs"""
         current_directory = os.getcwd()
         return full_path.replace(current_directory, '')
 
-    def find_seed_file_on_disk(self, filename):
-        """Locate the given filename in the root directory, returning its full path.
+    def find_seed_file_on_disk(self):
+        """Locate the given filename in the seed_file directory, returning its full path."""
+        seed_file_directory = os.path.join(self.root_directory, 'seed_file')
+        seed_file_count = 0
+        for filename in os.listdir(seed_file_directory):
+            seed_file_with_full_path = os.path.join(seed_file_directory, filename)
+            seed_file_count += 1
+        if seed_file_count > 1:
+            raise Exception('Multiple seed files found')
+        return seed_file_with_full_path
 
-        Note that the file must be in the top level directory, not a sub-directory."""
-        for found_file in os.listdir(self.root_directory):
-            if found_file == filename:
-                return os.path.join(self.root_directory, found_file)
+    def archive_seed_file(self):
+        """Move the current file in the 'seed_file' directory to the 'progression' directory."""
+        seed_file = find_seed_file_on_disk()
 
     def get_seed_file(self):
         """Get the seed file from the root_directory"""
+        # TODO: fix this to look at the new seed_file directory instead
         os.chdir(self.root_directory)
-        for listed_file in os.listdir("."):
+        for listed_file in os.listdir("seed_file"):
             if listed_file.endswith(".mid"):
                 return listed_file
 
