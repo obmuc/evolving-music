@@ -56,16 +56,18 @@ def review():
 
 @app.route("/select", methods = ['POST', 'GET'])
 def select():
+    file_handler = FileHandler()
     selected_file_with_relative_path = request.form.get('file_relative_path')
     selection_type = request.form.get('selection_type')
     print(selection_type)
+    # 1 archive the current seed file in the 'progression' directory
+    file_handler.archive_seed_file()
+    # 2 write the selected file to seed_file directory
     if selection_type == 'regenerate':
-        # 1 archive the current seed file in the 'progression' directory
-        # 2 write the selected file to seed_file directory
         # 3 use requests to submit a POST request to the /review route, passing in the selected file
         pass
     elif selection_type == 'quit':
-        # render a new 'quit' template.
+        # 3 render a new 'quit' template.
         pass
 
 

@@ -1,4 +1,5 @@
 import os
+import shutil
 import datetime
 import random
 
@@ -85,17 +86,43 @@ class FileHandler(object):
             raise Exception('Multiple seed files found')
         return seed_file_with_full_path
 
+    def _get_progression_index(self):
+        """Return the next number to use when labeling a file being moved to the progression 
+        directory."""
+        progression_directory = os.path.join(self.root_directory, 'progression')
+        archived_files = os.listdir(progression_directory)
+        if len(archived_files) == 0:
+            return 1
+        highest_index = 0
+        for archived_file in archived_files:
+            filename_parts = archived_file.split('#')
+            index = int(filename_parts[0])
+            if index > highest_index:
+                highest_index = index
+        return highest_index + 1
+
     def archive_seed_file(self):
         """Move the current file in the 'seed_file' directory to the 'progression' directory."""
-        seed_file = find_seed_file_on_disk()
+        seed_file_full_path = self.find_seed_file_on_disk()
+        print(f'seed_file_full_path: {seed_file_full_path}')
+        seed_file = seed_file_full_path.split('/')[-1]
+        print(f'seed_file: {seed_file}')
 
-    def get_seed_file(self):
-        """Get the seed file from the root_directory"""
-        # TODO: fix this to look at the new seed_file directory instead
-        os.chdir(self.root_directory)
-        for listed_file in os.listdir("seed_file"):
-            if listed_file.endswith(".mid"):
-                return listed_file
+        progression_index = self._get_progression_index()
+        progression_file_full_path = os.path.join(self.root_directory, 'progression', f'{progression_index}#{seed_file}')
+        print(f'progression_file_full_path: {progression_file_full_path}')
+
+        shutil.move(seed_file_full_path, progression_file_full_path)
+
+
+
+    # def get_seed_file(self):
+    #     """Get the seed file from the root_directory"""
+    #     # TODO: fix this to look at the new seed_file directory instead
+    #     os.chdir(self.root_directory)
+    #     for listed_file in os.listdir("seed_file"):
+    #         if listed_file.endswith(".mid"):
+    #             return listed_file
 
     @staticmethod
     def filename_to_list(filename):
