@@ -1,4 +1,5 @@
 import os
+import shutil
 from flask import Flask, render_template, request
 from mutator import FileHandler, Mutator, MidiMaker
 
@@ -36,11 +37,14 @@ def review():
     i = 0
     created_melodies = []
     created_files = []
+    output_directory = file_handler.setup_output_directory()
+    output_directory_seed_folder = os.path.join(output_directory, 'seed')
+    shutil.copy2(seed_file_with_full_path, output_directory_seed_folder)
     mutator = Mutator(seed_melody=seed_melody, mutation_percentage=5)
     while i < 10:
         mutated_melody = mutator.mutate()
         if mutated_melody != seed_melody and mutated_melody not in created_melodies:
-            midi_maker = MidiMaker(file_handler=file_handler, melody=mutated_melody)
+            midi_maker = MidiMaker(output_directory=output_directory, melody=mutated_melody)
             mutated_file = midi_maker.write()
             created_melodies.append(mutated_melody)
             created_files.append(file_handler.full_to_relative_path(mutated_file))
@@ -57,12 +61,13 @@ def review():
 @app.route("/select", methods = ['POST', 'GET'])
 def select():
     file_handler = FileHandler()
-    selected_file_with_relative_path = request.form.get('file_relative_path')
+    selected_file_with_relative_path = request.form.get('relative_file_path')
     selection_type = request.form.get('selection_type')
     print(selection_type)
     # 1 archive the current seed file in the 'progression' directory
     file_handler.archive_seed_file()
     # 2 write the selected file to seed_file directory
+    file_handler.selected_file_to_seed_file(selected_file_with_relative_path)
     if selection_type == 'regenerate':
         # 3 use requests to submit a POST request to the /review route, passing in the selected file
         pass

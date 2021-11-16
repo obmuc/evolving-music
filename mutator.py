@@ -26,9 +26,21 @@ class FileHandler(object):
     def __init__(self):
         self.root_directory = '/Users/obmuc/Documents/programming/python/evolving/evolving-music/static/midi_files'
         self.date_string = str(datetime.datetime.now().date())
-        self.directory = self._setup_directories()
+        self._setup_meta_directories()
 
-    def increment_directory_name(self, directory):
+    def _setup_meta_directories(self):
+        """Create the seed_file and progression directories if needed."""
+        # Create the 'seed_file' directory, if necessary
+        seed_file_directory = os.path.join(self.root_directory, 'seed_file')
+        if not os.path.exists(seed_file_directory):
+            os.makedirs(seed_file_directory)
+
+        # Create the 'progression' directory, if necessary
+        progression_directory = os.path.join(self.root_directory, 'progression')
+        if not os.path.exists(progression_directory):
+            os.makedirs(progression_directory)
+
+    def _increment_directory_name(self, directory):
         highest_current = None
         for path in Path(self.root_directory).iterdir():
             if path.is_dir():
@@ -45,35 +57,33 @@ class FileHandler(object):
             return f"{directory}_{highest_current + 1}"
         else:
             return f"{directory}_1"
-            
-    def _setup_directories(self):
-        """Create the necessary directories, if they don't exist already."""
-        # Create the 'seed_file' directory, if necessary
-        seed_file_directory = os.path.join(self.root_directory, 'seed_file')
-        if not os.path.exists(seed_file_directory):
-            os.makedirs(seed_file_directory)
 
-        # Create the 'progression' directory, if necessary
-        progression_directory = os.path.join(self.root_directory, 'progression')
-        if not os.path.exists(progression_directory):
-            os.makedirs(progression_directory)
-
+    def setup_output_directory(self):
         # Create a folder to store today's mutations, if necessary
         output_directory = os.path.join(self.root_directory, self.date_string)
         if not os.path.exists(output_directory):
             os.makedirs(output_directory)
         else:
-            output_directory = self.increment_directory_name(output_directory)
+            output_directory = self._increment_directory_name(output_directory)
+            os.makedirs(output_directory)
         # create a 'seed' directory inside the folder to store the file used to generate that day's mutations.
         output_seed_directory = os.path.join(output_directory, 'seed')
         if not os.path.exists(output_seed_directory):
             os.makedirs(output_seed_directory)
+
         return output_directory
 
     def full_to_relative_path(self, full_path):
-        """Convert a full file path to a relative path for use in URLs"""
+        """Convert a full file path to a relative path. """
         current_directory = os.getcwd()
         return full_path.replace(current_directory, '')
+
+    def relative_path_to_full(self, relative_path):
+        """Convert a relative path to a full path."""
+        # /static/midi_files/2021-11-15_1/60-0p5__
+        relative_path = relative_path.replace('/static/midi_files/', '')
+        full_path = os.path.join(self.root_directory, relative_path)
+        return full_path
 
     def find_seed_file_on_disk(self):
         """Locate the given filename in the seed_file directory, returning its full path."""
@@ -95,26 +105,28 @@ class FileHandler(object):
             return 1
         highest_index = 0
         for archived_file in archived_files:
-            filename_parts = archived_file.split('#')
-            index = int(filename_parts[0])
-            if index > highest_index:
-                highest_index = index
+            if archived_file not in ['.DS_Store']:
+                filename_parts = archived_file.split('#')
+                index = int(filename_parts[0])
+                if index > highest_index:
+                    highest_index = index
         return highest_index + 1
 
     def archive_seed_file(self):
         """Move the current file in the 'seed_file' directory to the 'progression' directory."""
         seed_file_full_path = self.find_seed_file_on_disk()
-        print(f'seed_file_full_path: {seed_file_full_path}')
         seed_file = seed_file_full_path.split('/')[-1]
-        print(f'seed_file: {seed_file}')
 
         progression_index = self._get_progression_index()
         progression_file_full_path = os.path.join(self.root_directory, 'progression', f'{progression_index}#{seed_file}')
-        print(f'progression_file_full_path: {progression_file_full_path}')
 
         shutil.move(seed_file_full_path, progression_file_full_path)
 
-
+    def selected_file_to_seed_file(self, selected_file_with_relative_path):
+        """Make a copy of the selected_file in the seed_file directory so that it can
+        be used as the 'seed_file' for the next iteration."""
+        selected_file_with_full_path = self.relative_path_to_full(selected_file_with_relative_path)
+        shutil.copy2(selected_file_with_full_path, os.path.join(self.root_directory, 'seed_file'))
 
     # def get_seed_file(self):
     #     """Get the seed file from the root_directory"""
@@ -153,9 +165,10 @@ class FileHandler(object):
 class MidiMaker:
     """ Transforms NoteUnits into midi notes that can be output. """
 
-    def __init__(self, file_handler, melody):
-        self.file_handler = file_handler
+    def __init__(self, output_directory, melody):
+        self.output_directory = output_directory
         self.melody = melody
+        self.file_handler = FileHandler()
 
         # set some defaults
         self.track = 0
@@ -172,7 +185,7 @@ class MidiMaker:
             for note in note_unit:
                 midi_file.addNote(self.track, self.channel, note[0], current_time, note[1], self.volume)  # note[1]
                 current_time += note[1]
-        file_name_with_path = os.path.join(self.file_handler.directory, self.file_handler.list_to_filename(melody_list=self.melody))
+        file_name_with_path = os.path.join(self.output_directory, self.file_handler.list_to_filename(melody_list=self.melody))
         with open(file_name_with_path, "wb") as output_file:
             midi_file.writeFile(output_file)
         return file_name_with_path
@@ -403,16 +416,12 @@ def main():
     file_handler = FileHandler()
     seed_file = file_handler.get_seed_file()
     seed_melody = file_handler.filename_to_list(filename=seed_file)
-    print("original melody:")
-    print(seed_melody)
     i = 0
     created_melodies = []
     mutator = Mutator(seed_melody=seed_melody, mutation_percentage=5)
     while i < 20:
         mutated_melody = mutator.mutate()
         if mutated_melody != seed_melody and mutated_melody not in created_melodies:
-            print("mutated_melody:")
-            print(mutated_melody)
             midi_maker = MidiMaker(file_handler=file_handler, melody=mutated_melody)
             midi_maker.write()
             created_melodies.append(mutated_melody)
