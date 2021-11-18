@@ -23,6 +23,8 @@ class FileHandler(object):
         48-1p0__51-0p25_52-0p25_55-1p0_51_0p5__48-2p0.mid
     """
 
+    INVALID_SYSTEM_FILES = ('.DS_Store')  # Files automatically added by the OS that should be ignored
+
     def __init__(self):
         self.root_directory = '/Users/obmuc/Documents/programming/python/evolving/evolving-music/static/midi_files'
         self.date_string = str(datetime.datetime.now().date())
@@ -90,8 +92,9 @@ class FileHandler(object):
         seed_file_directory = os.path.join(self.root_directory, 'seed_file')
         seed_file_count = 0
         for filename in os.listdir(seed_file_directory):
-            seed_file_with_full_path = os.path.join(seed_file_directory, filename)
-            seed_file_count += 1
+            if filename not in self.INVALID_SYSTEM_FILES:
+                seed_file_with_full_path = os.path.join(seed_file_directory, filename)
+                seed_file_count += 1
         if seed_file_count > 1:
             raise Exception('Multiple seed files found')
         return seed_file_with_full_path
@@ -105,7 +108,7 @@ class FileHandler(object):
             return 1
         highest_index = 0
         for archived_file in archived_files:
-            if archived_file not in ['.DS_Store']:
+            if archived_file not in self.INVALID_SYSTEM_FILES:
                 filename_parts = archived_file.split('#')
                 index = int(filename_parts[0])
                 if index > highest_index:

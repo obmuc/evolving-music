@@ -7,8 +7,8 @@ app = Flask(__name__)
 
 """ 
 TODO:
-- write selected file to a new folder, 'seed_file', and move any previous files in that folder to the 'progression' folder
-- add a 'Discard all and regenerate' option which deletes the folder that was created and starts over with the same seed file.
+- add a 'Discard all and regenerate' option which deletes the folder that was created (??) and starts over with the same seed file.
+    - alternatively, it might be fine to just link back to the /review route passing the current seed file in the URL
 - include file tempo in the file name
 - retrieve tempo from the file name and use when generating derivative melodies
 - create test suite
@@ -78,10 +78,9 @@ def select():
     if selection_type == 'regenerate':
         # 3 redirect to the /review route, passing the selected file as a GET parameter
         selected_file_no_path = selected_file_with_relative_path.split('/')[-1]
-        print(selected_file_no_path)
         return redirect(f"/review?seed_file={selected_file_no_path}")
     elif selection_type == 'quit':
-        # 3 render a new 'quit' template.
+        # 3 render the 'exit' template.
         return render_template('exit.html')
 
 
