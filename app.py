@@ -1,6 +1,6 @@
 import os
 import shutil
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request,redirect
 from mutator import FileHandler, Mutator, MidiMaker
 
 app = Flask(__name__)
@@ -26,7 +26,15 @@ def home():
 
 @app.route("/review", methods = ['POST', 'GET'])
 def review():
-    seed_file = request.form.get('seed_file')
+    seed_from_form = request.form.get('seed_file')
+    seed_from_url = request.args.get('seed_file')
+
+    if seed_from_form:
+        seed_file = seed_from_form
+    elif seed_from_url:
+        seed_file = seed_from_url
+    else:
+        raise AttributeError('You must specify the seed file via POST or GET parameter.')
 
     # alter to allow submittal of seed files that already have relative path
     file_handler = FileHandler()
@@ -63,17 +71,18 @@ def select():
     file_handler = FileHandler()
     selected_file_with_relative_path = request.form.get('relative_file_path')
     selection_type = request.form.get('selection_type')
-    print(selection_type)
     # 1 archive the current seed file in the 'progression' directory
     file_handler.archive_seed_file()
     # 2 write the selected file to seed_file directory
     file_handler.selected_file_to_seed_file(selected_file_with_relative_path)
     if selection_type == 'regenerate':
-        # 3 use requests to submit a POST request to the /review route, passing in the selected file
-        pass
+        # 3 redirect to the /review route, passing the selected file as a GET parameter
+        selected_file_no_path = selected_file_with_relative_path.split('/')[-1]
+        print(selected_file_no_path)
+        return redirect(f"/review?seed_file={selected_file_no_path}")
     elif selection_type == 'quit':
         # 3 render a new 'quit' template.
-        pass
+        return render_template('exit.html')
 
 
 
