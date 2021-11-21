@@ -7,6 +7,7 @@ app = Flask(__name__)
 
 """ 
 TODO:
+- create a '/progression' route that displays each of the files in the progression folder in order.
 - add a 'Discard all and regenerate' option which deletes the folder that was created (??) and starts over with the same seed file.
     - alternatively, it might be fine to just link back to the /review route passing the current seed file in the URL
 - include file tempo in the file name
@@ -24,7 +25,7 @@ def home():
     return render_template('home.html')
 
 
-@app.route("/review", methods = ['POST', 'GET'])
+@app.route("/review", methods=['POST', 'GET'])
 def review():
     seed_from_form = request.form.get('seed_file')
     seed_from_url = request.args.get('seed_file')
@@ -61,12 +62,13 @@ def review():
 
     return render_template(
         'review.html',
+        seed_file_no_path=seed_file,
         seed_file_with_relative_path = seed_file_with_relative_path,
         created_files = created_files
     )
 
 
-@app.route("/select", methods = ['POST', 'GET'])
+@app.route("/select", methods=['POST', 'GET'])
 def select():
     file_handler = FileHandler()
     selected_file_with_relative_path = request.form.get('relative_file_path')
@@ -82,6 +84,17 @@ def select():
     elif selection_type == 'quit':
         # 3 render the 'exit' template.
         return render_template('exit.html')
+
+
+@app.route("/progression", methods=['GET'])
+def progression():
+    file_handler = FileHandler()
+    progression_files = file_handler.get_sorted_progression_files()
+    return render_template(
+        'progression.html',
+        progression_files = progression_files
+    )
+
 
 
 

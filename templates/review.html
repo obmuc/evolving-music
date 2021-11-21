@@ -17,7 +17,7 @@
 		{% for mutated_file in created_files %}
 			<fieldset>
 
-			    <legend>{{ mutated_file }}</legend>
+			    <legend>({{ loop.index }}){{ mutated_file }}</legend>
 			     
 			    <midi-player src="{{ mutated_file }}" sound-font visualizer="#{{ mutated_file }}PianoRollVisualizer"></midi-player>
 
@@ -30,5 +30,9 @@
 				</form>
 			</fieldset>
 		{% endfor %}
+
+		<hr />
+
+		<p><a href="/review?seed_file={{ seed_file_no_path }}">Reject All and Regenerate</a></p>
 	</body>
 </html>

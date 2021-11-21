@@ -99,7 +99,7 @@ class FileHandler(object):
             raise Exception('Multiple seed files found')
         return seed_file_with_full_path
 
-    def _get_progression_index(self):
+    def _get_next_progression_index(self):
         """Return the next number to use when labeling a file being moved to the progression 
         directory."""
         progression_directory = os.path.join(self.root_directory, 'progression')
@@ -109,19 +109,34 @@ class FileHandler(object):
         highest_index = 0
         for archived_file in archived_files:
             if archived_file not in self.INVALID_SYSTEM_FILES:
-                filename_parts = archived_file.split('#')
+                filename_parts = archived_file.split('^')
                 index = int(filename_parts[0])
                 if index > highest_index:
                     highest_index = index
         return highest_index + 1
+
+    def _get_progression_index_from_file(self, filename):
+        """Return an integer for the index of the file; used in sorting."""
+        return int(filename.split('^')[0])
+
+
+    def get_sorted_progression_files(self):
+        """Return a sorted list of the files in the progression directory, with relative paths."""
+        progression_directory = os.path.join(self.root_directory, 'progression')
+        progression_files = []
+        for filename in os.listdir(progression_directory):
+            if filename not in self.INVALID_SYSTEM_FILES:
+                progression_files.append(filename)
+        progression_files.sort(key=self._get_progression_index_from_file)
+        return [self.full_to_relative_path(os.path.join(progression_directory, filename)) for filename in progression_files]
 
     def archive_seed_file(self):
         """Move the current file in the 'seed_file' directory to the 'progression' directory."""
         seed_file_full_path = self.find_seed_file_on_disk()
         seed_file = seed_file_full_path.split('/')[-1]
 
-        progression_index = self._get_progression_index()
-        progression_file_full_path = os.path.join(self.root_directory, 'progression', f'{progression_index}#{seed_file}')
+        progression_index = self._get_next_progression_index()
+        progression_file_full_path = os.path.join(self.root_directory, 'progression', f'{progression_index}^{seed_file}')
 
         shutil.move(seed_file_full_path, progression_file_full_path)
 
